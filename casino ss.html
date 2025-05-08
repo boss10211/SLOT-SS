@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игровой автомат</title>
+    <style>
+        body {
+            background-image: url('https://umbphotos.ag/images/d010af2be0b1c0f9413429a3aaee5acd.jpg'); /* Замените на URL вашего фонового изображения */
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            overflow-x: hidden; /* Избегаем горизонтальной прокрутки */
+        }
+        .promo-screen, .slot-machine {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        .promo-screen.active, .slot-machine.active {
+            display: flex;
+        }
+        .promo-code-input {
+            padding: 10px;
+            font-size: 1em;
+            border: 2px solid #000;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .promo-button {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: green;
+            border: 2px solid #d4af37;
+            color: black;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 5px;
+        }
+        .message {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            color: red;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 2px solid red;
+            border-radius: 5px;
+            display: none;
+            margin-top: 10px;
+        }
+        .background-image {
+            width: 100%;
+            height: auto;
+        }
+        .reels {
+            display: grid;
+            grid-template-columns: repeat(4, 80px);
+            grid-template-rows: repeat(3, 80px);
+            gap: 0px;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            top: -300px;
+            transform: translateX(-20px);
+        }
+        .reel {
+            width: 80px;
+            height: 235px;
+            border: 1px solid #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3em;
+            background-color: #E0FFFF;
+            overflow: hidden;
+            position: relative;
+        }
+        .reel-container {
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            top: 0;
+        }
+        .reel img {
+            width: 80px;
+            height: 80px;
+        }
+        .button {
+            position: absolute;
+            bottom: 4%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 70px 400px;
+            font-size: 1.5em;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        .button img {
+            width: 210px;
+            height: auto;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный фон */
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .result-button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: green;
+            border: 2px solid #d4af37;
+            color: black;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 5px;
+            position: absolute;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        @keyframes spin {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-50%); }
+        }
+
+        @keyframes stop {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-50%); }
+        }
+
+        /* Медиа-запросы для адаптации под мобильные устройства и планшеты */
+        @media (max-width: 768px) {
+            .reels {
+                grid-template-columns: repeat(4, 60px);
+                grid-template-rows: repeat(3, 60px);
+                top: -150px;
+                transform: translateX(-10px);
+            }
+            .reel {
+                width: 70px;
+                height: 210px;
+                font-size: 2em;
+            }
+            .reel img {
+                width: 65px;
+                height: 65px;
+            }
+            .button {
+                padding: 30px 200px;
+                font-size: 1em;
+            }
+            .button img {
+                width: 300px;
+            }
+            .result-button {
+                padding: 10px 15px;
+                font-size: 0.8em;
+                color: green;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .reels {
+                grid-template-columns: repeat(4, 65px);
+                grid-template-rows: repeat(3, 65px);
+                top: -230px;
+                transform: translateX(-12px);
+            }
+            .reel {
+                width: 70px;
+                height: 195px;
+                font-size: 1.5em;
+            }
+            .reel img {
+                width: 65px;
+                height: 65px;
+            }
+            .button {
+                padding: 20px 100px;
+                font-size: 0.8em;
+            }
+            .button img {
+                width: 200px;
+            }
+            .result-button {
+                padding: 5px 10px;
+                font-size: 0.6em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="promo-screen active">
+        <input type="text" id="promoCode" class="promo-code-input" placeholder="Введите промокод">
+        <button class="promo-button" onclick="checkPromoCode()">Активировать</button>
+        <div id="message" class="message"></div>
+    </div>
+    <div class="slot-machine">
+        <img src="https://umbphotos.ag/images/1c65319fb1d73032980ec97795d5ba9a.png" alt="Background" class="background-image">
+        <div class="reels">
+            <div class="reel" id="reel1">
+                <div class="reel-container">
+                    <img src="https://umbphotos.ag/images/cd2f8879ce5d356e0f3ad484bf4ae4e1.jpg" alt="Symbol 1">
+                    <img src="https://umbphotos.ag/images/a5531410c0560796f029d46da13e3c60.png" alt="Symbol 2">
+                    <img src="https://i.postimg.cc/BbznxHGF/IMG-0021.png" alt="Symbol 3">
+                    <img src="https://umbphotos.ag/images/ddbdf92d3a6ae60a56384f0286a52204.jpg" alt="Symbol 4">
+                </div>
+            </div>
+            <div class="reel" id="reel2">
+                <div class="reel-container">
+                    <img src="https://umbphotos.ag/images/cd2f8879ce5d356e0f3ad484bf4ae4e1.jpg" alt="Symbol 1">
+                    <img src="https://umbphotos.ag/images/a5531410c0560796f029d46da13e3c60.png" alt="Symbol 2">
+                    <img src="https://i.postimg.cc/BbznxHGF/IMG-0021.png" alt="Symbol 3">
+                    <img src="https://umbphotos.ag/images/ddbdf92d3a6ae60a56384f0286a52204.jpg" alt="Symbol 4">
+                </div>
+            </div>
+            <div class="reel" id="reel3">
+                <div class="reel-container">
+                    <img src="https://umbphotos.ag/images/cd2f8879ce5d356e0f3ad484bf4ae4e1.jpg" alt="Symbol 1">
+                    <img src="https://umbphotos.ag/images/a5531410c0560796f029d46da13e3c60.png" alt="Symbol 2">
+                    <img src="https://i.postimg.cc/BbznxHGF/IMG-0021.png" alt="Symbol 3">
+                    <img src="https://umbphotos.ag/images/ddbdf92d3a6ae60a56384f0286a52204.jpg" alt="Symbol 4">
+                </div>
+            </div>
+            <div class="reel" id="reel4">
+                <div class="reel-container">
+                    <img src="https://umbphotos.ag/images/cd2f8879ce5d356e0f3ad484bf4ae4e1.jpg" alt="Symbol 1">
+                    <img src="https://umbphotos.ag/images/a5531410c0560796f029d46da13e3c60.png" alt="Symbol 2">
+                    <img src="https://i.postimg.cc/BbznxHGF/IMG-0021.png" alt="Symbol 3">
+                    <img src="https://umbphotos.ag/images/ddbdf92d3a6ae60a56384f0286a52204.jpg" alt="Symbol 4">
+                </div>
+            </div>
+        </div>
+        <button class="button" onclick="spin()">
+            <img src="https://umbphotos.ag/images/210ce9d2450809f6fdca803d3d10dcac.png" alt="Крутить">
+        </button>
+        <audio id="spinSound" src="spin.mp3"></audio> <!-- Локальный аудиофайл -->
+        <audio id="winSound" src="win.mp3"></audio> <!-- Локальный аудиофайл для победы -->
+    </div>
+    <div id="overlay" class="overlay">
+        <img id="resultImage" class="result-image" src="" alt="Result" style="display: none;">
+        <button id="resultButton" class="result-button" onclick="resetGame()">Попробуй еще раз</button>
+    </div>
+    <script>
+        const symbols = [
+            'https://umbphotos.ag/images/cd2f8879ce5d356e0f3ad484bf4ae4e1.jpg',
+            'https://umbphotos.ag/images/a5531410c0560796f029d46da13e3c60.png',
+            'https://i.postimg.cc/BbznxHGF/IMG-0021.png',
+            'https://umbphotos.ag/images/ddbdf92d3a6ae60a56384f0286a52204.jpg',
+            'https://umbphotos.ag/images/ddbdf92d3a6ae60a56384f0286a52204.jpg',
+            'https://umbphotos.ag/images/ddbdf92d3a6ae60a56384f0286a52204.jpg'
+        ];
+
+        const winImageUrl = 'https://umbphotos.ag/images/d6d730ff59bf17e6daa9f16c6f5be53a.png'; // Замените на URL вашего изображения победы
+        const telegramBotToken = '7162200673:AAE_OoDAmZKjtQ2QpmxTmC2US4Nclefb_vU'; // Замените на токен вашего Telegram бота
+        const telegramChatId = '7977906148'; // Замените на ID чата администратора
+
+    const promoCodes = [
+    'A9B88C7D6', 'E5F84G3H2', 'I18J0K9L8', 'M7N6O58P4', 'Q3R82S1T0',
+    'U9V88W7X6', 'Y5Z48A3B2', 'C81D0E9F8', 'G7H6I58J4', 'K83L2M1N0',
+    'O9P88Q7R6', 'S5T48U3V2', 'W1X0Y89Z8', 'A7B68C5D4', 'E38F2G1H0',
+    'I9J88K7L6', 'M5N48O3P2', 'Q1R08S9T8', 'U7V6W85X4', 'Y83Z2A1B0',
+    'C98D8E7F6', 'G5H48I3J2', 'K1L0M89N8', 'O7P86Q5R4', 'S38T2U1V0',
+    'W9X88Y7Z6', 'A5B84C3D2', 'E1F08G9H8', 'I7J86K5L4', 'M83N2O1P0',
+    'Q9R88S7T6', 'U5V84W3X2', 'Y1Z0A9B88', 'C7D68E5F4', 'G3H28I1J0',
+    'K89L8M7N6', 'O85P4Q3R2', 'S1T08U9V8', 'W7X86Y5Z4', 'A83B2C1D0',
+    'E9F88G7H6', 'I5J84K3L2', 'M1N0O98P8', 'Q78R6S5T4', '8U3V2W1X0',
+    'Y9Z88A7B6', 'C5D84E3F2', 'G1H08I9J8', 'K7L68M5N4', 'O3P82Q1R0',
+    'S9T8U87V6', 'W5X4Y3Z82', 'A1B80C9D8', 'E7F6G58H4', 'I38J2K1L0',
+    'M9N8O87P6', 'Q5R4S83T2', 'U1V08W9X8', 'Y7Z6A58B4', 'C83D2E1F0',
+    'G98H8I7J6', 'K58L4M3N2', 'O1P0Q98R8', 'S78T6U5V4', 'W83X2Y1Z0',
+    'A9B88C7D6', 'E58F4G3H2', 'I18J0K9L8', 'M7N6O85P4', 'Q83R2S1T0',
+    'U9V8W78X6', 'Y5Z4A38B2', 'C1D0E89F8', 'G7H6I85J4', 'K38L2M1N0',
+    'O9P88Q7R6', 'S5T84U3V2', 'W1X80Y9Z8', 'A7B86C5D4', 'E38F2G1H0',
+    'I9J8K78L6', 'M5N4O83P2', 'Q1R80S9T8', 'U7V86W5X4', 'Y38Z2A1B0',
+    'C9D8E78F6', 'G5H4I3J82', 'K1L08M9N8', 'O7P68Q5R4', 'S38T2U1V0',
+    'W9X88Y7Z6', 'A5B4C83D2', 'E1F08G9H8', 'I7J6K85L4', 'M38N2O1P0'
+];
+
+        let attemptCount = localStorage.getItem('attemptCount') ? parseInt(localStorage.getItem('attemptCount')) : 0;
+        let cycleCount = localStorage.getItem('cycleCount') ? parseInt(localStorage.getItem('cycleCount')) : 0;
+        let hasWon = localStorage.getItem('hasWon') === 'true';
+        let usedPromoCodes = JSON.parse(localStorage.getItem('usedPromoCodes')) || [];
+
+        function checkPromoCode() {
+            const promoCode = document.getElementById('promoCode').value;
+            const messageElement = document.getElementById('message');
+
+            if (!promoCodes.includes(promoCode) || usedPromoCodes.includes(promoCode)) {
+                messageElement.textContent = 'Неверный или уже использованный промокод';
+                messageElement.style.display = 'block';
+                setTimeout(() => {
+                    messageElement.style.display = 'none';
+                }, 3000); // Сообщение исчезнет через 3 секунды
+                return;
+            }
+
+            document.querySelector('.promo-screen').classList.remove('active');
+            document.querySelector('.slot-machine').classList.add('active');
+        }
+
+        function spin() {
+            const promoCode = document.getElementById('promoCode').value;
+            const spinSound = document.getElementById('spinSound');
+            spinSound.play();
+
+            let result;
+            if (!hasWon && (attemptCount === 4 || Math.random() < 0.2)) { // Победа на последней попытке или с вероятностью 20%
+                setReels(true);
+                result = 'Победа';
+                hasWon = true;
+                localStorage.setItem('hasWon', hasWon);
+            } else {
+                setReels(false);
+                result = 'Проигрыш';
+            }
+
+            attemptCount++;
+            localStorage.setItem('attemptCount', attemptCount);
+            usedPromoCodes.push(promoCode);
+            localStorage.setItem('usedPromoCodes', JSON.stringify(usedPromoCodes));
+            document.getElementById('promoCode').value = ''; // Очистить поле ввода промокода
+
+            sendResultToTelegram(promoCode, result);
+
+            if (attemptCount === 5) {
+                resetCycle();
+            }
+        }
+
+function initializeReels() {
+    const reelElements = [];
+    for (let i = 1; i <= 4; i++) { // Изменено на 4 барабана
+        const reel = document.getElementById(`reel${i}`);
+        const reelContainer = reel.querySelector('.reel-container');
+        reelElements.push(reelContainer);
+        let randomSymbols = shuffleArray(symbols.slice()); // Перемешиваем символы
+        reelContainer.innerHTML = ''; // Очищаем контейнер
+        randomSymbols.forEach(symbol => {
+            const img = document.createElement('img');
+            img.src = symbol;
+            reelContainer.appendChild(img);
+        });
+    }
+}
+
+function setReels(isWin) {
+    const spinDuration = 10000; // Продолжительность вращения в миллисекундах
+    const reelElements = [];
+    const spinCount = 30; // Количество вращений
+
+    for (let i = 1; i <= 4; i++) { // Изменено на 4 барабана
+        const reel = document.getElementById(`reel${i}`);
+        const reelContainer = reel.querySelector('.reel-container');
+        reelElements.push(reelContainer);
+        reelContainer.style.transition = 'none'; // Отключаем анимацию для мгновенного перемещения
+        reelContainer.style.top = '0'; // Начальная позиция
+        reelContainer.style.animation = `spin ${spinDuration / spinCount / 1000}s linear infinite`; // Устанавливаем анимацию
+    }
+
+    setTimeout(() => {
+        for (let i = 0; i < reelElements.length; i++) {
+            const reelContainer = reelElements[i];
+
+            // Останавливаем вращение и устанавливаем конечный результат
+            setTimeout(() => {
+                reelContainer.style.animation = 'none'; // Останавливаем анимацию
+                reelContainer.innerHTML = ''; // Очищаем контейнер
+
+                if (isWin) {
+                    // Если победа, устанавливаем одинаковые символы
+                    const winSymbol = symbols[0]; // Выбираем первый символ как победный
+                    for (let j = 0; j < 10; j++) { // Добавляем 10 одинаковых символов
+                        const img = document.createElement('img');
+                        img.src = winSymbol;
+                        reelContainer.appendChild(img);
+                    }
+                } else {
+                    // Если не победа, перемешиваем символы
+                    let randomSymbols = shuffleArray(symbols.slice()); // Перемешиваем символы
+                    randomSymbols.forEach(symbol => {
+                        const img = document.createElement('img');
+                        img.src = symbol;
+                        reelContainer.appendChild(img);
+                    });
+                }
+
+                reelContainer.style.transition = 'none';
+                reelContainer.style.transform = 'translateY(0)';
+            }, spinDuration + i * 500); // Задержка для последовательной остановки
+        }
+    }, 100); // Небольшая задержка перед началом анимации
+
+    // Показать кнопку после завершения анимации
+    setTimeout(() => {
+        showResult(isWin);
+    }, spinDuration + reelElements.length * 500 + 100); // Добавляем небольшую задержку для завершения всех анимаций
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// Инициализация барабанов при загрузке страницы
+initializeReels();
+
+// Инициализация барабанов перед каждой новой игрой
+document.getElementById('startGameButton').addEventListener('click', initializeReels);
+
+        function showResult(isWin) {
+            const overlay = document.getElementById('overlay');
+            const resultImage = document.getElementById('resultImage');
+            const resultButton = document.getElementById('resultButton');
+            const winSound = document.getElementById('winSound');
+
+            if (isWin) {
+                resultImage.src = winImageUrl;
+                resultImage.style.display = 'block';
+                resultButton.textContent = '🎆Поздравляем🎆 Вы выиграли 1️⃣ грамм⚖️. Отправьте свой промокод🏷 и получите приз🎁 у оператора 💻';
+                resultButton.onclick = () => window.location.href = telegramUrl;
+                winSound.play();
+            } else {
+                resultImage.style.display = 'none'; // Убираем изображение при проигрыше
+                resultButton.textContent = 'Попробуй еще раз';
+                resultButton.onclick = resetGame;
+            }
+
+            overlay.style.display = 'flex';
+        }
+
+        function resetCycle() {
+            attemptCount = 0;
+            hasWon = false;
+            cycleCount++;
+            localStorage.setItem('attemptCount', attemptCount);
+            localStorage.setItem('hasWon', hasWon);
+            localStorage.setItem('cycleCount', cycleCount);
+        }
+
+        function resetGame() {
+            const overlay = document.getElementById('overlay');
+            overlay.style.display = 'none';
+            document.querySelector('.slot-machine').classList.remove('active');
+            document.querySelector('.promo-screen').classList.add('active');
+        }
+
+        function sendResultToTelegram(promoCode, result) {
+            const message = `Промокод: ${promoCode}\nРезультат: ${result}`;
+            const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage?chat_id=${telegramChatId}&text=${encodeURIComponent(message)}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.ok) {
+                        console.error('Ошибка при отправке сообщения в Telegram:', data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при отправке сообщения в Telegram:', error);
+                });
+        }
+    </script>
+</body>
+</html>
