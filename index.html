@@ -61,24 +61,24 @@
         }
         .reels {
             display: grid;
-            grid-template-columns: repeat(4, 80px);
+            grid-template-columns: repeat(4, 74px);
             grid-template-rows: repeat(3, 80px);
             gap: 0px;
             justify-content: center;
             align-items: center;
             position: relative;
-            top: -300px;
-            transform: translateX(-20px);
+            top: -322px;
+            transform: translateX(-21px);
         }
         .reel {
-            width: 80px;
-            height: 235px;
+            width: 74px;
+            height: 162px;
             border: 1px solid #000;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 3em;
-            background-color: #E0FFFF;
+            background-color: #000;
             overflow: hidden;
             position: relative;
         }
@@ -89,8 +89,8 @@
             top: 0;
         }
         .reel img {
-            width: 80px;
-            height: 80px;
+            width: 54px;
+            height: 54px;
         }
         .button {
             position: absolute;
@@ -180,19 +180,19 @@
 
         @media (max-width: 600px) {
             .reels {
-                grid-template-columns: repeat(4, 65px);
-                grid-template-rows: repeat(3, 65px);
-                top: -230px;
-                transform: translateX(-12px);
+                grid-template-columns: repeat(4, 54px);
+                grid-template-rows: repeat(3, 54px);
+                top: -240px;
+                transform: translateX(-16px);
             }
             .reel {
-                width: 70px;
-                height: 195px;
+                width: 54px;
+                height: 120px;
                 font-size: 1.5em;
             }
             .reel img {
-                width: 65px;
-                height: 65px;
+                width: 44px;
+                height: 40px;
             }
             .button {
                 padding: 20px 100px;
