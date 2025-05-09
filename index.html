@@ -201,9 +201,14 @@
             .button img {
                 width: 200px;
             }
+            .result-image {
+                width: 100%;
+            }
             .result-button {
                 padding: 5px 10px;
-                font-size: 0.6em;
+                font-size: 1em;
+                width: 90%;
+                color: white;
             }
         }
     </style>
@@ -271,7 +276,7 @@
             'https://umbphotos.ag/images/ddbdf92d3a6ae60a56384f0286a52204.jpg'
         ];
 
-        const winImageUrl = 'https://umbphotos.ag/images/1e87334bfa6f79e2335e76432fb71544.png'; // Замените на URL вашего изображения победы
+        const winImageUrl = 'https://umbphotos.ag/images/d6d730ff59bf17e6daa9f16c6f5be53a.png'; // Замените на URL вашего изображения победы
         const telegramBotToken = '7685280208:AAFvqSmOw7i8_65J9UUMPzHRrxRRRx9z9TQ'; // Замените на токен вашего Telegram бота
         const telegramChatId = '7668599182'; // Замените на ID чата администратора
 
@@ -298,6 +303,7 @@
     'SYMB-JS8C3U2EC', 'SYMB-K66A4EJX4', 'SYMB-KGH7AHL1S', 'SYMB-KHK3Z21OZ', 'SYMB-KZ91NTI8I',
     'SYMB-LDH3T4VPO', 'SYMB-LKE3IEJ9N'
 ];
+
         let attemptCount = localStorage.getItem('attemptCount') ? parseInt(localStorage.getItem('attemptCount')) : 0;
         let cycleCount = localStorage.getItem('cycleCount') ? parseInt(localStorage.getItem('cycleCount')) : 0;
         let hasWon = localStorage.getItem('hasWon') === 'true';
